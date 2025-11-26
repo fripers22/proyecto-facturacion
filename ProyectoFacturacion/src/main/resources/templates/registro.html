@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Sistema de Facturación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .registro-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .registro-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .registro-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .registro-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group .error {
+            color: #c33;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        
+        .form-group input.is-invalid {
+            border-color: #c33;
+        }
+        
+        .btn-registro {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-registro:hover {
+            transform: translateY(-2px);
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background-color: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+        
+        .alert-success {
+            background-color: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="registro-container">
+        <div class="registro-header">
+            <h1>📝 Registro de Usuario</h1>
+            <p>Sistema de Facturación</p>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-error">
+            <span th:text="${error}">Error message</span>
+        </div>
+        
+        <div th:if="${exito}" class="alert alert-success">
+            <span th:text="${exito}">Success message</span>
+        </div>
+        
+        <form th:action="@{/registro}" method="post" th:object="${usuario}">
+            <div class="form-group">
+                <label for="username">Usuario *</label>
+                <input type="text" id="username" th:field="*{username}" 
+                       th:class="${#fields.hasErrors('username')} ? 'is-invalid' : ''"
+                       placeholder="Nombre de usuario" required>
+                <span class="error" th:if="${#fields.hasErrors('username')}" 
+                      th:errors="*{username}">Username error</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" th:field="*{email}" 
+                       th:class="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                       placeholder="correo@ejemplo.com" required>
+                <span class="error" th:if="${#fields.hasErrors('email')}" 
+                      th:errors="*{email}">Email error</span>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" id="nombre" th:field="*{nombre}" 
+                           th:class="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
+                           placeholder="Tu nombre" required>
+                    <span class="error" th:if="${#fields.hasErrors('nombre')}" 
+                          th:errors="*{nombre}">Nombre error</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apellido">Apellido *</label>
+                    <input type="text" id="apellido" th:field="*{apellido}" 
+                           th:class="${#fields.hasErrors('apellido')} ? 'is-invalid' : ''"
+                           placeholder="Tu apellido" required>
+                    <span class="error" th:if="${#fields.hasErrors('apellido')}" 
+                          th:errors="*{apellido}">Apellido error</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña *</label>
+                <input type="password" id="password" th:field="*{password}" 
+                       th:class="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                       placeholder="Mínimo 6 caracteres" required>
+                <span class="error" th:if="${#fields.hasErrors('password')}" 
+                      th:errors="*{password}">Password error</span>
+            </div>
+            
+            <button type="submit" class="btn-registro">Registrarse</button>
+        </form>
+        
+        <div class="login-link">
+            ¿Ya tienes una cuenta? <a th:href="@{/login}">Inicia sesión aquí</a>
+        </div>
+    </div>
+</body>
+</html>

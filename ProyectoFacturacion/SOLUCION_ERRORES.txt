@@ -1,0 +1,195 @@
+=================================================================
+SOLUCIÓN RÁPIDA - ERRORES DE COMPILACIÓN EN ProyectoFacturacion
+=================================================================
+
+PROBLEMA DETECTADO:
+El archivo Usuario.java se creó correctamente, pero Eclipse no lo ha reconocido.
+El archivo UsuarioServicio.java necesita ser actualizado manualmente.
+
+SOLUCIÓN PASO A PASO:
+
+1. REFRESCAR EL PROYECTO
+   - Botón derecho en "ProyectoFacturacion" → Refresh (F5)
+   - Esto hará que Eclipse reconozca el nuevo archivo Usuario.java
+
+2. ACTUALIZAR UsuarioServicio.java
+   
+   UBICACIÓN: src/main/java/uts/edu/java/facturacion/servicio/UsuarioServicio.java
+   
+   REEMPLAZA TODO EL CONTENIDO con este código:
+
+```java
+package uts.edu.java.facturacion.servicio;
+
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import uts.edu.java.facturacion.dto.UsuarioRegistroDTO;
+import uts.edu.java.facturacion.modelo.Rol;
+import uts.edu.java.facturacion.modelo.Usuario;
+import uts.edu.java.facturacion.repositorio.RolRepositorio;
+import uts.edu.java.facturacion.repositorio.UsuarioRepositorio;
+
+@Service
+@Transactional
+public class UsuarioServicio implements IUsuarioServicio {
+
+    @Autowired
+    UsuarioRepositorio usuarioRepositorio;
+    
+    @Autowired
+    private RolRepositorio rolRepositorio;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public List<Usuario> getUsuarios() {
+        return usuarioRepositorio.findAll();
+    }
+
+    @Override
+    public Usuario nuevoUsuario(Usuario usuario) {
+        return usuarioRepositorio.save(usuario);
+    }
+
+    @Override
+    public Usuario buscarUsuario(Integer id) {
+        return usuarioRepositorio.findById(Long.valueOf(id)).orElse(null);
+    }
+
+    @Override
+    public void borrarUsuario(Integer id) {
+        usuarioRepositorio.deleteById(Long.valueOf(id));
+    }
+    
+    // MÉTODOS PARA EL SISTEMA DE LOGIN CON SPRING SECURITY
+    
+    @Transactional
+    public Usuario registrarUsuario(UsuarioRegistroDTO registroDTO) {
+        if (usuarioRepositorio.existsByUsername(registroDTO.getUsername())) {
+            throw new RuntimeException("El nombre de usuario ya está en uso");
+        }
+        
+        if (usuarioRepositorio.existsByEmail(registroDTO.getEmail())) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+        
+        Usuario usuario = new Usuario();
+        usuario.setUsername(registroDTO.getUsername());
+        usuario.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
+        usuario.setEmail(registroDTO.getEmail());
+        usuario.setNombre(registroDTO.getNombre());
+        usuario.setApellido(registroDTO.getApellido());
+        usuario.setEnabled(true);
+        
+        Set<Rol> roles = new HashSet<>();
+        Rol rolUser = rolRepositorio.findByNombre("ROLE_USER")
+                .orElseGet(() -> {
+                    Rol nuevoRol = new Rol("ROLE_USER");
+                    return rolRepositorio.save(nuevoRol);
+                });
+        roles.add(rolUser);
+        usuario.setRoles(roles);
+        
+        return usuarioRepositorio.save(usuario);
+    }
+    
+    public Usuario buscarPorUsername(String username) {
+        return usuarioRepositorio.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
+    
+    public boolean existePorUsername(String username) {
+        return usuarioRepositorio.existsByUsername(username);
+    }
+    
+    public boolean existePorEmail(String email) {
+        return usuarioRepositorio.existsByEmail(email);
+    }
+}
+```
+
+3. VERIFICAR ARCHIVO pom.xml
+   
+   Asegúrate de que el pom.xml tenga estas dependencias:
+   
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-security</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>org.thymeleaf.extras</groupId>
+       <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+   </dependency>
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-starter-validation</artifactId>
+   </dependency>
+   ```
+
+4. ACTUALIZAR MAVEN
+   - Botón derecho en ProyectoFacturacion → Maven → Update Project
+   - Marcar "Force Update of Snapshots/Releases"
+   - Click OK
+
+5. LIMPIAR Y COMPILAR
+   - Project → Clean...
+   - Seleccionar "ProyectoFacturacion"
+   - Click OK
+
+6. VERIFICAR QUE NO HAY ERRORES
+   - Ir a la vista "Problems"
+   - Todos los errores relacionados con Usuario deben desaparecer
+
+7. CREAR/VERIFICAR BASE DE DATOS
+   ```sql
+   CREATE DATABASE IF NOT EXISTS proyecto_facturacion_db;
+   USE proyecto_facturacion_db;
+   ```
+   
+   Luego ejecuta: src/main/resources/schema.sql
+
+8. EJECUTAR LA APLICACIÓN
+   - Botón derecho en ProyectoFacturacion → Run As → Spring Boot App
+
+9. ACCEDER AL SISTEMA
+   - Navegador: http://localhost:8092/login
+
+=================================================================
+ARCHIVOS YA CREADOS CORRECTAMENTE:
+=================================================================
+✓ Usuario.java (Modelo con Spring Security)
+✓ Rol.java (Modelo de roles)
+✓ UsuarioRepositorio.java (Con métodos de Spring Security)
+✓ RolRepositorio.java
+✓ UsuarioRegistroDTO.java (Con validaciones)
+✓ CustomUserDetailsService.java
+✓ SecurityConfig.java
+✓ AuthControlador.java
+✓ HomeControlador.java
+✓ login.html
+✓ registro.html
+✓ acceso-denegado.html
+✓ schema.sql
+✓ application.properties
+
+SOLO FALTA:
+✗ Actualizar UsuarioServicio.java (ver paso 2 arriba)
+✗ Refrescar proyecto (F5)
+✗ Actualizar Maven
+
+=================================================================
+USUARIOS DE PRUEBA (después de ejecutar schema.sql):
+=================================================================
+Admin: admin / admin123
+User: user / user123
+
+=================================================================

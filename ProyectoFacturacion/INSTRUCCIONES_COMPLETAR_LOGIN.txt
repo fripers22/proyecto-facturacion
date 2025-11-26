@@ -1,0 +1,380 @@
+# SISTEMA DE LOGIN COMPLETO - PROYECTO FACTURACIÓN
+# INSTRUCCIONES DE IMPLEMENTACIÓN
+
+## ✅ ARCHIVOS YA CREADOS EN ProyectoFacturacion:
+
+1. **Modelo:**
+   - ✓ Rol.java (NUEVO)
+   - ✗ Usuario.java (REQUIERE ACTUALIZACIÓN MANUAL)
+
+2. **Repositorio:**
+   - ✓ RolRepositorio.java (NUEVO)
+   - ✓ UsuarioRepositorio.java (ACTUALIZADO)
+
+3. **DTO:**
+   - ✓ UsuarioRegistroDTO.java (NUEVO)
+
+4. **Servicio:**
+   - ✓ CustomUserDetailsService.java (NUEVO)
+   - ✗ UsuarioServicio.java (REQUIERE ACTUALIZACIÓN MANUAL)
+
+5. **Configuración:**
+   - ✓ SecurityConfig.java (NUEVO)
+
+6. **Controladores:**
+   - ✓ AuthControlador.java (NUEVO)
+   - ✓ HomeControlador.java (NUEVO)
+
+7. **Vistas:**
+   - ✓ login.html (NUEVO)
+   - ✓ registro.html (NUEVO)
+   - ✓ acceso-denegado.html (NUEVO)
+
+8. **Base de datos:**
+   - ✓ schema.sql (NUEVO)
+
+9. **Configuración:**
+   - ✓ application.properties (ACTUALIZADO)
+   - ✓ pom.xml (YA TIENE LAS DEPENDENCIAS CORRECTAS)
+
+---
+
+## ⚠️ ARCHIVOS QUE NECESITAS ACTUALIZAR MANUALMENTE:
+
+### 1️⃣ Usuario.java
+
+**UBICACIÓN:** `src/main/java/uts/edu/java/facturacion/modelo/Usuario.java`
+
+**ACCIÓN:** Reemplaza TODO el contenido del archivo con este código:
+
+```java
+package uts.edu.java.facturacion.modelo;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "usuarios")
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank(message = "El nombre de usuario es obligatorio")
+    @Size(min = 3, max = 50)
+    @Column(unique = true, nullable = false, length = 50)
+    private String username;
+    
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6)
+    @Column(nullable = false)
+    private String password;
+    
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "Debe proporcionar un email válido")
+    @Column(unique = true, nullable = false)
+    private String email;
+    
+    @Column(nullable = false)
+    private String nombre;
+    
+    @Column(nullable = false)
+    private String apellido;
+    
+    private String cedula;
+    
+    @Column(nullable = false)
+    private boolean enabled = true;
+    
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(
+        name = "usuarios_roles",
+        joinColumns = @JoinColumn(name = "usuario_id"),
+        inverseJoinColumns = @JoinColumn(name = "rol_id")
+    )
+    private Set<Rol> roles = new HashSet<>();
+
+    // Constructores
+    public Usuario() {
+    }
+
+    public Usuario(String username, String password, String email, String nombre, String apellido) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.enabled = true;
+    }
+
+    // Getters y Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getCedula() {
+        return cedula;
+    }
+
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Set<Rol> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Rol> roles) {
+        this.roles = roles;
+    }
+}
+```
+
+---
+
+### 2️⃣ UsuarioServicio.java
+
+**UBICACIÓN:** `src/main/java/uts/edu/java/facturacion/servicio/UsuarioServicio.java`
+
+**ACCIÓN:** Reemplaza TODO el contenido del archivo con este código:
+
+```java
+package uts.edu.java.facturacion.servicio;
+
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import uts.edu.java.facturacion.dto.UsuarioRegistroDTO;
+import uts.edu.java.facturacion.modelo.Rol;
+import uts.edu.java.facturacion.modelo.Usuario;
+import uts.edu.java.facturacion.repositorio.RolRepositorio;
+import uts.edu.java.facturacion.repositorio.UsuarioRepositorio;
+
+@Service
+@Transactional
+public class UsuarioServicio implements IUsuarioServicio {
+
+    @Autowired
+    UsuarioRepositorio usuarioRepositorio;
+    
+    @Autowired
+    private RolRepositorio rolRepositorio;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public List<Usuario> getUsuarios() {
+        return usuarioRepositorio.findAll();
+    }
+
+    @Override
+    public Usuario nuevoUsuario(Usuario usuario) {
+        return usuarioRepositorio.save(usuario);
+    }
+
+    @Override
+    public Usuario buscarUsuario(Integer id) {
+        return usuarioRepositorio.findById(Long.valueOf(id)).orElse(null);
+    }
+
+    @Override
+    public void borrarUsuario(Integer id) {
+        usuarioRepositorio.deleteById(Long.valueOf(id));
+    }
+    
+    // MÉTODOS PARA EL SISTEMA DE LOGIN CON SPRING SECURITY
+    
+    @Transactional
+    public Usuario registrarUsuario(UsuarioRegistroDTO registroDTO) {
+        if (usuarioRepositorio.existsByUsername(registroDTO.getUsername())) {
+            throw new RuntimeException("El nombre de usuario ya está en uso");
+        }
+        
+        if (usuarioRepositorio.existsByEmail(registroDTO.getEmail())) {
+            throw new RuntimeException("El email ya está registrado");
+        }
+        
+        Usuario usuario = new Usuario();
+        usuario.setUsername(registroDTO.getUsername());
+        usuario.setPassword(passwordEncoder.encode(registroDTO.getPassword()));
+        usuario.setEmail(registroDTO.getEmail());
+        usuario.setNombre(registroDTO.getNombre());
+        usuario.setApellido(registroDTO.getApellido());
+        usuario.setEnabled(true);
+        
+        Set<Rol> roles = new HashSet<>();
+        Rol rolUser = rolRepositorio.findByNombre("ROLE_USER")
+                .orElseGet(() -> {
+                    Rol nuevoRol = new Rol("ROLE_USER");
+                    return rolRepositorio.save(nuevoRol);
+                });
+        roles.add(rolUser);
+        usuario.setRoles(roles);
+        
+        return usuarioRepositorio.save(usuario);
+    }
+    
+    public Usuario buscarPorUsername(String username) {
+        return usuarioRepositorio.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
+    
+    public boolean existePorUsername(String username) {
+        return usuarioRepositorio.existsByUsername(username);
+    }
+    
+    public boolean existePorEmail(String email) {
+        return usuarioRepositorio.existsByEmail(email);
+    }
+}
+```
+
+---
+
+## 🚀 PASOS PARA EJECUTAR EL PROYECTO:
+
+### 1. Actualizar archivos manualmente
+- Abre `Usuario.java` y reemplaza su contenido con el código de arriba
+- Abre `UsuarioServicio.java` y reemplaza su contenido con el código de arriba
+
+### 2. Actualizar Maven
+- Botón derecho en ProyectoFacturacion → Maven → Update Project
+- Marca "Force Update of Snapshots/Releases"
+- Click OK
+
+### 3. Crear/Verificar la base de datos
+```sql
+CREATE DATABASE IF NOT EXISTS proyecto_facturacion_db;
+USE proyecto_facturacion_db;
+```
+
+Luego ejecuta el contenido de `src/main/resources/schema.sql`
+
+### 4. Ejecutar la aplicación
+- Botón derecho en ProyectoFacturacion → Run As → Spring Boot App
+
+### 5. Acceder al sistema
+- Abrir navegador: http://localhost:8092/login
+
+### 6. Probar el login
+
+**Opción A: Registrar nuevo usuario**
+- Click en "Regístrate aquí"
+- Completa el formulario
+- Inicia sesión
+
+**Opción B: Usuarios de prueba** (si ejecutaste schema.sql)
+- Admin: `admin` / `admin123`
+- Usuario: `user` / `user123`
+
+---
+
+## 📊 CARACTERÍSTICAS IMPLEMENTADAS:
+
+✅ Login seguro con Spring Security 6
+✅ Registro de nuevos usuarios
+✅ Cifrado de contraseñas con BCrypt
+✅ Validación de formularios
+✅ Control de acceso basado en roles
+✅ Gestión de sesiones HTTP
+✅ Logout con limpieza de sesión
+✅ Mensajes de error y éxito
+✅ Diseño responsive moderno
+✅ Protección CSRF
+✅ Prevención SQL Injection
+
+---
+
+## 🔧 PUERTOS CONFIGURADOS:
+
+- ProyectoCorte2: 8090
+- ParcialCorte2: 8091
+- **ProyectoFacturacion: 8092** ✅
+- ProyectoCorte3: 8093
+
+---
+
+## 📝 NOTAS IMPORTANTES:
+
+1. El archivo `pom.xml` ya tiene todas las dependencias necesarias
+2. El `application.properties` está configurado correctamente
+3. JPA creará las tablas automáticamente (ddl-auto=update)
+4. Puedes ejecutar schema.sql para insertar usuarios de prueba
+5. El puerto 8092 está libre (cambiado de 8090)
+
+---
+
+## ❗ SI HAY ERRORES DE COMPILACIÓN:
+
+1. Verifica que actualizaste Usuario.java y UsuarioServicio.java
+2. Actualiza Maven (Update Project)
+3. Limpia el proyecto (Project → Clean)
+4. Rebuild (Project → Build Project)
+
+---
+
+¡El sistema de login está listo en ProyectoFacturacion!
