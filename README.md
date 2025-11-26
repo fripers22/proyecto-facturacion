@@ -1,4 +1,4 @@
-# 🧾 Sistema de Facturación con Autenticación - Parcial Corte 2
+# 🧾 Sistema de Facturación con Autenticación 
 
 Aplicación web empresarial desarrollada en **Spring Boot 3.4.0** con **Spring Security**, **Thymeleaf** y **MySQL/MariaDB**, correspondiente al segundo corte académico de la asignatura Programación en Java.
 
