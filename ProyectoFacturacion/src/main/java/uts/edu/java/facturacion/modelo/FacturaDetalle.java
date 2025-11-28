@@ -74,7 +74,6 @@ public class FacturaDetalle {
 
     public void setCantidad(Integer cantidad) {
         this.cantidad = cantidad;
-        calcularSubtotal();
     }
 
     public Double getPrecioUnitario() {
@@ -83,7 +82,6 @@ public class FacturaDetalle {
 
     public void setPrecioUnitario(Double precioUnitario) {
         this.precioUnitario = precioUnitario;
-        calcularSubtotal();
     }
 
     public Double getSubtotal() {

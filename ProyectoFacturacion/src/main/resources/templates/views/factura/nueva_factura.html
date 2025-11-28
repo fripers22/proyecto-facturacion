@@ -16,27 +16,58 @@
                 <form th:action="@{/views/factura/save}" th:object="${factura}" method="post">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="numero" class="form-label">Número de Factura</label>
-                            <input type="text" class="form-control" id="numero" th:field="*{numero}" required>
+                            <label for="usuarioId" class="form-label">Usuario ID</label>
+                            <input type="number" class="form-control" id="usuarioId" th:field="*{usuario.id}" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="cliente" class="form-label">Cliente</label>
-                            <input type="text" class="form-control" id="cliente" th:field="*{cliente}" required>
+                            <label for="fechaEmision" class="form-label">Fecha de Emisión</label>
+                            <input type="datetime-local" class="form-control" id="fechaEmision" th:field="*{fechaEmision}" required>
                         </div>
                     </div>
+                    
+                    <hr>
+                    <h5>Productos</h5>
+                    <div id="productos-container">
+                        <div class="row producto-item mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label">Producto</label>
+                                <select class="form-control producto-select" name="productoIds" required>
+                                    <option value="">Seleccione un producto</option>
+                                    <option th:each="producto : ${productos}" 
+                                            th:value="${producto.id}" 
+                                            th:text="${producto.descripcion + ' - $' + producto.precio}"
+                                            th:attr="data-precio=${producto.precio}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Cantidad</label>
+                                <input type="number" class="form-control cantidad-input" name="cantidades" min="1" value="1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Subtotal</label>
+                                <input type="text" class="form-control subtotal-display" readonly value="$0.00">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger btn-sm remove-producto" disabled>
+                                    <i class="bi bi-trash"></i>X
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary btn-sm mb-3" id="add-producto">+ Agregar Producto</button>
+                    
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="fecha" class="form-label">Fecha</label>
-                            <input type="date" class="form-control" id="fecha" th:field="*{fecha}" required>
+                        <div class="col-md-8"></div>
+                        <div class="col-md-4">
+                            <h5>Total: <span id="total-display" class="text-success">$0.00</span></h5>
                         </div>
                     </div>
                     
-                    <div class="alert alert-info">
-                        <strong>Nota:</strong> Los detalles de la factura se pueden agregar después de crear la factura.
-                    </div>
-                    
+                    <hr>
                     <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="submit" class="btn btn-success">Guardar Factura</button>
                         <a th:href="@{/views/factura/}" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
@@ -45,5 +76,56 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('productos-container');
+            const addBtn = document.getElementById('add-producto');
+            
+            // Calcular subtotal y total
+            function calcularTotales() {
+                let total = 0;
+                document.querySelectorAll('.producto-item').forEach(item => {
+                    const select = item.querySelector('.producto-select');
+                    const cantidad = item.querySelector('.cantidad-input').value;
+                    const subtotalDisplay = item.querySelector('.subtotal-display');
+                    
+                    if (select.value) {
+                        const precio = parseFloat(select.options[select.selectedIndex].dataset.precio || 0);
+                        const subtotal = precio * parseFloat(cantidad || 0);
+                        subtotalDisplay.value = '$' + subtotal.toFixed(2);
+                        total += subtotal;
+                    } else {
+                        subtotalDisplay.value = '$0.00';
+                    }
+                });
+                
+                document.getElementById('total-display').textContent = '$' + total.toFixed(2);
+            }
+            
+            // Event listeners para calcular totales
+            container.addEventListener('change', calcularTotales);
+            container.addEventListener('input', calcularTotales);
+            
+            // Agregar producto
+            addBtn.addEventListener('click', function() {
+                const newItem = container.querySelector('.producto-item').cloneNode(true);
+                newItem.querySelector('.producto-select').selectedIndex = 0;
+                newItem.querySelector('.cantidad-input').value = 1;
+                newItem.querySelector('.subtotal-display').value = '$0.00';
+                newItem.querySelector('.remove-producto').disabled = false;
+                container.appendChild(newItem);
+            });
+            
+            // Eliminar producto
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-producto') || e.target.parentElement.classList.contains('remove-producto')) {
+                    if (container.querySelectorAll('.producto-item').length > 1) {
+                        e.target.closest('.producto-item').remove();
+                        calcularTotales();
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

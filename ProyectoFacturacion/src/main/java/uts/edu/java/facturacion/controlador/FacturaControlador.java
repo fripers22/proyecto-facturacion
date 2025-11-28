@@ -41,7 +41,29 @@ public class FacturaControlador {
 
     // Guardar factura
     @PostMapping("/save")
-    public String guardar(@ModelAttribute Factura factura) {
+    public String guardar(@ModelAttribute Factura factura,
+                         @RequestParam(value = "productoIds", required = false) List<Integer> productoIds,
+                         @RequestParam(value = "cantidades", required = false) List<Integer> cantidades) {
+        
+        // Si se enviaron productos, agregar los detalles
+        if (productoIds != null && !productoIds.isEmpty() && cantidades != null) {
+            for (int i = 0; i < productoIds.size(); i++) {
+                if (i < cantidades.size()) {
+                    Producto producto = productoServicio.buscarPorId(productoIds.get(i));
+                    Integer cantidad = cantidades.get(i);
+                    
+                    FacturaDetalle detalle = new FacturaDetalle();
+                    detalle.setProducto(producto);
+                    detalle.setPrecioUnitario(producto.getPrecio());
+                    detalle.setCantidad(cantidad);
+                    detalle.calcularSubtotal(); // Calcular después de tener ambos valores
+                    detalle.setFactura(factura);
+                    
+                    factura.getDetalles().add(detalle);
+                }
+            }
+        }
+        
         facturaServicio.guardar(factura);
         return "redirect:/views/factura/";
     }

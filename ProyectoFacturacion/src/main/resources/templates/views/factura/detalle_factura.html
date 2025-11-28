@@ -15,11 +15,11 @@
             <div class="card-body">
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <p><strong>Número:</strong> <span th:text="${factura.numero}"></span></p>
-                        <p><strong>Cliente:</strong> <span th:text="${factura.cliente}"></span></p>
+                        <p><strong>ID Factura:</strong> <span th:text="${factura.id}"></span></p>
+                        <p><strong>Usuario:</strong> <span th:text="${factura.usuario.username}"></span></p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Fecha:</strong> <span th:text="${#temporals.format(factura.fecha, 'dd/MM/yyyy')}"></span></p>
+                        <p><strong>Fecha de Emisión:</strong> <span th:text="${#temporals.format(factura.fechaEmision, 'dd/MM/yyyy HH:mm')}"></span></p>
                         <p><strong>Total:</strong> <span class="text-success fw-bold" th:text="${'$' + #numbers.formatDecimal(factura.total, 1, 2)}"></span></p>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="detalle : ${factura.detalles}">
-                            <td th:text="${detalle.producto.nombre}"></td>
+                            <td th:text="${detalle.producto != null ? detalle.producto.descripcion : 'Producto eliminado'}"></td>
                             <td th:text="${detalle.cantidad}"></td>
                             <td th:text="${'$' + #numbers.formatDecimal(detalle.precioUnitario, 1, 2)}"></td>
                             <td th:text="${'$' + #numbers.formatDecimal(detalle.subtotal, 1, 2)}"></td>

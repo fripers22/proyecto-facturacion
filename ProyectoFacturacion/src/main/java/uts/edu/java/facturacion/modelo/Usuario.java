@@ -125,11 +125,23 @@ public class Usuario {
         this.enabled = enabled; 
     } 
  
-    public Set<Rol> getRoles() { 
-        return roles; 
-    } 
- 
-    public void setRoles(Set<Rol> roles) { 
-        this.roles = roles; 
-    } 
+    public Set<Rol> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Rol> roles) {
+        this.roles = roles;
+    }
+    
+    // Helper methods para formularios que usan rol singular
+    public String getRol() {
+        if (roles != null && !roles.isEmpty()) {
+            return roles.iterator().next().getNombre();
+        }
+        return null;
+    }
+    
+    public void setRol(String rolNombre) {
+        // Este método se usa desde formularios - se maneja en el controlador
+    }
 }
